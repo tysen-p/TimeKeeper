@@ -6,6 +6,10 @@ let log = []; // Stores local log (optional for display)
 let totalHours = 0; // Default total hours
 let lastClockIn = null; // Timestamp for the current session
 
+// DOM Elements
+const clockInBtn = document.getElementById("clockInBtn");
+const clockOutBtn = document.getElementById("clockOutBtn");
+
 // Function to send messages to Telegram
 function sendToTelegram(message) {
     fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
@@ -17,8 +21,8 @@ function sendToTelegram(message) {
     });
 }
 
-// Function to fetch the latest Clock In from Telegram
-async function fetchLastClockIn() {
+// Function to fetch the latest Clock In and Clock Out from Telegram
+async function fetchLastSessionState() {
     try {
         const response = await fetch(`https://api.telegram.org/bot${telegramToken}/getUpdates`);
         const data = await response.json();
@@ -26,16 +30,23 @@ async function fetchLastClockIn() {
         if (data.ok) {
             const messages = data.result.reverse(); // Start from the latest message
             for (const message of messages) {
-                if (message.message.text.startsWith("Clock In at")) {
-                    const match = message.message.text.match(/Clock In at (.+)/);
+                const text = message.message.text;
+
+                if (text.startsWith("Clock In at")) {
+                    const match = text.match(/Clock In at (.+)/);
                     if (match) {
-                        lastClockIn = new Date(match[1]); // Parse the date from the message
+                        lastClockIn = new Date(match[1]);
                         console.log(`Fetched Last Clock In: ${lastClockIn}`);
-                        return; // Exit once the correct message is found
+                        break;
                     }
                 }
+
+                if (text.startsWith("Clock Out at")) {
+                    lastClockIn = null; // Reset Clock In since Clock Out occurred last
+                    console.log("Last action was Clock Out.");
+                    break;
+                }
             }
-            console.log("No Clock In message found.");
         } else {
             console.error('Failed to fetch updates from Telegram:', data);
         }
@@ -80,19 +91,20 @@ function updateLogDisplay() {
 }
 
 // Clock In functionality
-document.getElementById("clockInBtn").addEventListener("click", () => {
+clockInBtn.addEventListener("click", () => {
     const timestamp = new Date();
     lastClockIn = timestamp; // Save Clock In time
     log.push(`Clock In: ${timestamp.toLocaleString()}`);
     updateLogDisplay();
     sendToTelegram(`Clock In at ${timestamp.toLocaleString()}`);
+    clockInBtn.disabled = true; // Disable Clock In
+    clockOutBtn.disabled = false; // Enable Clock Out
 });
 
 // Clock Out functionality
-document.getElementById("clockOutBtn").addEventListener("click", () => {
+clockOutBtn.addEventListener("click", () => {
     if (!lastClockIn) {
         alert("Please Clock In first!");
-        console.log("lastClockIn is null. Ensure the Clock In message is sent to Telegram.");
         return;
     }
 
@@ -106,17 +118,29 @@ document.getElementById("clockOutBtn").addEventListener("click", () => {
 
     // Update total hours in Telegram
     sendToTelegram(`Clock Out at ${timestamp.toLocaleString()}\nWorked ${workedHours.toFixed(2)} hours this session.\nTotal Hours Worked: ${totalHours.toFixed(2)} hours`);
-});
-
-// Fetch total hours on demand
-document.getElementById("sendFullLogBtn")?.addEventListener("click", () => {
-    sendToTelegram(`Total Hours Worked: ${totalHours.toFixed(2)} hours`);
+    clockInBtn.disabled = false; // Enable Clock In
+    clockOutBtn.disabled = true; // Disable Clock Out
 });
 
 // Initialize the app and fetch stored data from Telegram
 (async function init() {
     console.log("Initializing app...");
-    await fetchLastClockIn(); // Fetch the most recent Clock In from Telegram
+    clockInBtn.disabled = true; // Disable Clock In until data is loaded
+    clockOutBtn.disabled = true; // Disable Clock Out until data is loaded
+
+    await fetchLastSessionState(); // Fetch the most recent Clock In or Clock Out
     await fetchTotalHours(); // Fetch the stored total hours
+
+    // Enable buttons based on the last session state
+    if (lastClockIn) {
+        console.log("Last session state: Clocked In.");
+        clockInBtn.disabled = true;
+        clockOutBtn.disabled = false;
+    } else {
+        console.log("Last session state: Clocked Out.");
+        clockInBtn.disabled = false;
+        clockOutBtn.disabled = true;
+    }
+
     updateLogDisplay(); // Update the UI
 })();
