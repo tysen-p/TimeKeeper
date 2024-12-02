@@ -1,0 +1,53 @@
+/* General body styling */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+/* Title styling */
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+/* Button styling */
+button {
+    margin: 10px;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for buttons */
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Log display box */
+#logDisplay {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 5px;
+    max-height: 200px;
+    overflow-y: auto; /* Adds a scroll bar if the content overflows */
+    text-align: left;
+}
+
+/* Styling for individual log entries */
+#logDisplay p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+}
