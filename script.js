@@ -17,6 +17,32 @@ function sendToTelegram(message) {
     });
 }
 
+// Function to fetch the latest Clock In from Telegram
+async function fetchLastClockIn() {
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${telegramToken}/getUpdates`);
+        const data = await response.json();
+
+        if (data.ok) {
+            const messages = data.result.reverse(); // Start from the latest message
+            for (const message of messages) {
+                if (message.message.text.startsWith("Clock In at")) {
+                    const match = message.message.text.match(/Clock In at (.+)/);
+                    if (match) {
+                        lastClockIn = new Date(match[1]); // Update lastClockIn from Telegram
+                        console.log(`Fetched Last Clock In: ${lastClockIn}`);
+                        return;
+                    }
+                }
+            }
+        } else {
+            console.error('Failed to fetch updates from Telegram:', data);
+        }
+    } catch (error) {
+        console.error('Error fetching updates from Telegram:', error);
+    }
+}
+
 // Function to fetch total hours from Telegram
 async function fetchTotalHours() {
     try {
@@ -54,7 +80,7 @@ function updateLogDisplay() {
 // Clock In functionality
 document.getElementById("clockInBtn").addEventListener("click", () => {
     const timestamp = new Date();
-    lastClockIn = timestamp;
+    lastClockIn = timestamp; // Save Clock In time
     log.push(`Clock In: ${timestamp.toLocaleString()}`);
     updateLogDisplay();
     sendToTelegram(`Clock In at ${timestamp.toLocaleString()}`);
@@ -84,8 +110,9 @@ document.getElementById("sendFullLogBtn")?.addEventListener("click", () => {
     sendToTelegram(`Total Hours Worked: ${totalHours.toFixed(2)} hours`);
 });
 
-// Initialize the app and fetch total hours from Telegram
+// Initialize the app and fetch stored data from Telegram
 (async function init() {
+    await fetchLastClockIn(); // Fetch the most recent Clock In from Telegram
     await fetchTotalHours(); // Fetch the stored total hours
     updateLogDisplay(); // Update the UI
 })();
