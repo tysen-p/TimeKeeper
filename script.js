@@ -1,7 +1,28 @@
-// Load existing log from localStorage or initialize an empty array
-let log = JSON.parse(localStorage.getItem("workLog")) || [];
+// Replace these with your bot's API token and chat ID
+const telegramToken = '7700260562:AAEDkB1YsEeNfOAtsstVX_PcqKKwvZrBWWA';
+const chatId = 'YOUR_CHAT_ID'; // Replace YOUR_CHAT_ID with your actual chat ID
 
-// Function to update the log display
+// Function to send messages to Telegram
+function sendToTelegram(message) {
+    fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message }),
+    })
+        .then(response => {
+            if (response.ok) {
+                alert('Log sent to Telegram!');
+            } else {
+                alert('Failed to send log to Telegram. Check your token and chat ID.');
+            }
+        })
+        .catch(error => {
+            console.error('Error sending to Telegram:', error);
+            alert('An error occurred while sending to Telegram.');
+        });
+}
+
+// Function to update the log display in the browser
 function updateLogDisplay() {
     const logDisplay = document.getElementById("logDisplay");
     logDisplay.innerHTML = log.length
@@ -9,29 +30,33 @@ function updateLogDisplay() {
         : "<p>No records yet!</p>";
 }
 
-// Function to handle Clock In
+// Load existing log from localStorage or initialize an empty array
+let log = JSON.parse(localStorage.getItem("workLog")) || [];
+
+// Clock In functionality
 document.getElementById("clockInBtn").addEventListener("click", () => {
-    const timestamp = new Date().toLocaleString(); // Get current date and time
-    log.push(`Clock In at ${timestamp}`);
-    localStorage.setItem("workLog", JSON.stringify(log)); // Save updated log to localStorage
-    updateLogDisplay(); // Immediately update the log display
+    const timestamp = new Date().toLocaleString();
+    const message = `Clock In: ${timestamp}`;
+    log.push(message); // Save log locally
+    localStorage.setItem("workLog", JSON.stringify(log)); // Save log to localStorage
+    updateLogDisplay(); // Update the display
+    sendToTelegram(message); // Send log to Telegram
 });
 
-// Function to handle Clock Out
+// Clock Out functionality
 document.getElementById("clockOutBtn").addEventListener("click", () => {
-    const timestamp = new Date().toLocaleString(); // Get current date and time
-    log.push(`Clock Out at ${timestamp}`);
-    localStorage.setItem("workLog", JSON.stringify(log)); // Save updated log to localStorage
-    updateLogDisplay(); // Immediately update the log display
+    const timestamp = new Date().toLocaleString();
+    const message = `Clock Out: ${timestamp}`;
+    log.push(message); // Save log locally
+    localStorage.setItem("workLog", JSON.stringify(log)); // Save log to localStorage
+    updateLogDisplay(); // Update the display
+    sendToTelegram(message); // Send log to Telegram
 });
 
-// Function to clear the log
-document.getElementById("clearLogBtn")?.addEventListener("click", () => {
-    if (confirm("Are you sure you want to clear all logs?")) {
-        log = []; // Clear the log array
-        localStorage.removeItem("workLog"); // Remove data from localStorage
-        updateLogDisplay(); // Update the log display to show it's empty
-    }
+// Send Full Log functionality (Optional)
+document.getElementById("sendFullLogBtn")?.addEventListener("click", () => {
+    const fullLog = log.join('\n');
+    sendToTelegram(`Full Log:\n${fullLog}`);
 });
 
 // Initialize the log display on page load
