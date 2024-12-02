@@ -1,6 +1,6 @@
 // Replace these with your bot's API token and chat ID
 const telegramToken = '7700260562:AAEDkB1YsEeNfOAtsstVX_PcqKKwvZrBWWA';
-const chatId = 'YOUR_CHAT_ID'; // Replace YOUR_CHAT_ID with your actual chat ID
+const chatId = '1446987860';
 
 // Function to send messages to Telegram
 function sendToTelegram(message) {
