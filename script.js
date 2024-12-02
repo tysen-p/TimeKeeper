@@ -29,12 +29,13 @@ async function fetchLastClockIn() {
                 if (message.message.text.startsWith("Clock In at")) {
                     const match = message.message.text.match(/Clock In at (.+)/);
                     if (match) {
-                        lastClockIn = new Date(match[1]); // Update lastClockIn from Telegram
+                        lastClockIn = new Date(match[1]); // Parse the date from the message
                         console.log(`Fetched Last Clock In: ${lastClockIn}`);
-                        return;
+                        return; // Exit once the correct message is found
                     }
                 }
             }
+            console.log("No Clock In message found.");
         } else {
             console.error('Failed to fetch updates from Telegram:', data);
         }
@@ -61,6 +62,7 @@ async function fetchTotalHours() {
                     }
                 }
             }
+            console.log("No Total Hours message found.");
         } else {
             console.error('Failed to fetch updates from Telegram:', data);
         }
@@ -90,6 +92,7 @@ document.getElementById("clockInBtn").addEventListener("click", () => {
 document.getElementById("clockOutBtn").addEventListener("click", () => {
     if (!lastClockIn) {
         alert("Please Clock In first!");
+        console.log("lastClockIn is null. Ensure the Clock In message is sent to Telegram.");
         return;
     }
 
@@ -112,6 +115,7 @@ document.getElementById("sendFullLogBtn")?.addEventListener("click", () => {
 
 // Initialize the app and fetch stored data from Telegram
 (async function init() {
+    console.log("Initializing app...");
     await fetchLastClockIn(); // Fetch the most recent Clock In from Telegram
     await fetchTotalHours(); // Fetch the stored total hours
     updateLogDisplay(); // Update the UI
